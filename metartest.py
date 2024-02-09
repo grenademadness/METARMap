@@ -93,7 +93,7 @@ OFFSET_LEGEND_BY = 0
 print("Running metar.py at " + datetime.datetime.now().strftime('%d/%m/%Y %H:%M'))
 
 
-def DoLightningBlinks(conditionDict, airports, windCycle):
+def DoLightningBlinks(conditionDict, airports, windCycle, orig_pixels):
         for x in range(0, MAX_LIGHTNING_BLINKS):
                 i = 0
                 for airportcode in airports:
@@ -102,48 +102,16 @@ def DoLightningBlinks(conditionDict, airports, windCycle):
                                 i += 1
                                 continue
 
-                        color = COLOR_CLEAR
                         conditions = conditionDict.get(airportcode, None)
-                        windy = False
-                        highWinds = False
-                        lightningConditions = False
 
                         if conditions != None:
-                                windy = True if (ACTIVATE_WINDCONDITION_ANIMATION and windCycle == True and (conditions["windSpeed"] >= WIND_BLINK_THRESHOLD or conditions["windGust"] == True)) else False
-                                highWinds = True if (windy and HIGH_WINDS_THRESHOLD != -1 and (conditions["windSpeed"] >= HIGH_WINDS_THRESHOLD or conditions["windGustSpeed"] >= HIGH_WINDS_THRESHOLD)) else False
-                                lightningConditions = True if (ACTIVATE_LIGHTNING_ANIMATION and windCycle == False and conditions["lightning"] == True) else False
+                                lightningConditions = conditions["lightning"] == True
 
                                 if lightningConditions == True:
                                         if pixels[i] != COLOR_LIGHTNING:
-                                                color = COLOR_LIGHTNING
-                                                continue
-
-                                if windy == False and lightningConditions == False:
-                                        if conditions["flightCategory"] == "VFR":
-                                                color = COLOR_VFR
-                                        elif conditions["flightCategory"] == "MVFR":
-                                                color = COLOR_MVFR
-                                        elif conditions["flightCategory"] == "IFR":
-                                                color = COLOR_IFR
-                                        elif conditions["flightCategory"] == "LIFR":
-                                                color = COLOR_LIFR
+                                                pixels[i] = COLOR_LIGHTNING
                                         else:
-                                                color = COLOR_CLEAR
-
-                                elif highWinds:
-                                        c = COLOR_HIGH_WINDS
-
-                                else:
-                                        if conditions["flightCategory"] == "VFR":
-                                                color = COLOR_VFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
-                                        elif conditions["flightCategory"] == "MVFR":
-                                                color = COLOR_MVFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
-                                        elif conditions["flightCategory"] == "IFR":
-                                                color = COLOR_IFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
-                                        elif conditions["flightCategory"] == "LIFR":
-                                                color = COLOR_LIFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
-                                        else:
-                                                color = COLOR_CLEAR
+                                                pixels[i] = orig_pixels[i]
                         
                         pixels[i] = color
                         i += 1
@@ -304,14 +272,12 @@ while looplimit > 0:
                 conditions = conditionDict.get(airportcode, None)
                 windy = False
                 highWinds = False
-                lightningConditions = False
 
                 if conditions != None:
                         windy = True if (ACTIVATE_WINDCONDITION_ANIMATION and windCycle == True and (conditions["windSpeed"] >= WIND_BLINK_THRESHOLD or conditions["windGust"] == True)) else False
                         highWinds = True if (windy and HIGH_WINDS_THRESHOLD != -1 and (conditions["windSpeed"] >= HIGH_WINDS_THRESHOLD or conditions["windGustSpeed"] >= HIGH_WINDS_THRESHOLD)) else False
-                        lightningConditions = True if (ACTIVATE_LIGHTNING_ANIMATION and windCycle == False and conditions["lightning"] == True) else False
 
-                        if windy == False and lightningConditions == False:
+                        if windy == False:
                                 if conditions["flightCategory"] == "VFR":
                                         color = COLOR_VFR
                                 elif conditions["flightCategory"] == "MVFR":
@@ -322,9 +288,6 @@ while looplimit > 0:
                                         color = COLOR_LIFR
                                 else:
                                         color = COLOR_CLEAR
-
-                        elif lightningConditions == True:
-                                color = COLOR_LIGHTNING
 
                         elif highWinds:
                                 c = COLOR_HIGH_WINDS
@@ -340,13 +303,7 @@ while looplimit > 0:
                                         color = COLOR_LIFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
                                 else:
                                         color = COLOR_CLEAR
-
-                        #Override for lightning flash
-                        if lightningConditions == True:
-                                if windCycle == True:
-                                        color = COLOR_LIGHTNING
                 
-                print("Setting LED " + str(i) + " for " + airportcode + " to " + ("lightning " if lightningConditions else "") + ("very " if highWinds else "") + ("windy " if windy else "") + (conditions["flightCategory"] if conditions != None else "None") + " " + str(color))
                 pixels[i] = color
                 i += 1
 
@@ -377,8 +334,9 @@ while looplimit > 0:
                         print("showing METAR Display for " + stationList[displayAirportCounter])
 
         # Switching between animation cycles
-        DoLightningBlinks(conditionDict, airports, windCycle)
-        windCycle = False if windCycle else True
+        if windCycle == True and ACTIVATE_LIGHTNING_ANIMATION:
+                DoLightningBlinks(conditionDict, airports, windCycle, pixels)
+        windCycle = not windCycle
         looplimit -= 1
 
 print()
