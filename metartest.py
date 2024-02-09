@@ -44,6 +44,7 @@ COLOR_HIGH_WINDS         = (255,255,0)                 # Yellow
 ACTIVATE_WINDCONDITION_ANIMATION = True        # Set this to False for Static or True for animated wind conditions
 #Do you want the Map to Flash white for lightning in the area
 ACTIVATE_LIGHTNING_ANIMATION = True                # Set this to False for Static or True for animated Lightning
+MAX_LIGHTNING_BLINKS = 4
 # Fade instead of blink
 FADE_INSTEAD_OF_BLINK        = True                        # Set to False if you want blinking
 # Blinking Windspeed Threshold
@@ -90,6 +91,66 @@ OFFSET_LEGEND_BY = 0
 # ---------------------------------------------------------------------------
 
 print("Running metar.py at " + datetime.datetime.now().strftime('%d/%m/%Y %H:%M'))
+
+
+def DoLightningBlinks(conditionDict, airports, windCycle):
+        for x in range(0, MAX_LIGHTNING_BLINKS):
+                i = 0
+                for airportcode in airports:
+                        # Skip NULL entries
+                        if airportcode == "NULL":
+                                i += 1
+                                continue
+
+                        color = COLOR_CLEAR
+                        conditions = conditionDict.get(airportcode, None)
+                        windy = False
+                        highWinds = False
+                        lightningConditions = False
+
+                        if conditions != None:
+                                windy = True if (ACTIVATE_WINDCONDITION_ANIMATION and windCycle == True and (conditions["windSpeed"] >= WIND_BLINK_THRESHOLD or conditions["windGust"] == True)) else False
+                                highWinds = True if (windy and HIGH_WINDS_THRESHOLD != -1 and (conditions["windSpeed"] >= HIGH_WINDS_THRESHOLD or conditions["windGustSpeed"] >= HIGH_WINDS_THRESHOLD)) else False
+                                lightningConditions = True if (ACTIVATE_LIGHTNING_ANIMATION and windCycle == False and conditions["lightning"] == True) else False
+
+                                if lightningConditions == True:
+                                        if pixels[i] != COLOR_LIGHTNING:
+                                                color = COLOR_LIGHTNING
+                                                continue
+
+                                if windy == False and lightningConditions == False:
+                                        if conditions["flightCategory"] == "VFR":
+                                                color = COLOR_VFR
+                                        elif conditions["flightCategory"] == "MVFR":
+                                                color = COLOR_MVFR
+                                        elif conditions["flightCategory"] == "IFR":
+                                                color = COLOR_IFR
+                                        elif conditions["flightCategory"] == "LIFR":
+                                                color = COLOR_LIFR
+                                        else:
+                                                color = COLOR_CLEAR
+
+                                elif highWinds:
+                                        c = COLOR_HIGH_WINDS
+
+                                else:
+                                        if conditions["flightCategory"] == "VFR":
+                                                color = COLOR_VFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
+                                        elif conditions["flightCategory"] == "MVFR":
+                                                color = COLOR_MVFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
+                                        elif conditions["flightCategory"] == "IFR":
+                                                color = COLOR_IFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
+                                        elif conditions["flightCategory"] == "LIFR":
+                                                color = COLOR_LIFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_CLEAR
+                                        else:
+                                                color = COLOR_CLEAR
+                        
+                        pixels[i] = color
+                        i += 1
+
+                pixels.show()
+                time.sleep(BLINK_SPEED / MAX_LIGHTNING_BLINKS)
+
 
 # Figure out sunrise/sunset times if astral is being used
 if astral is not None and USE_SUNRISE_SUNSET:
@@ -282,7 +343,8 @@ while looplimit > 0:
 
                         #Override for lightning flash
                         if lightningConditions == True:
-                                color = COLOR_LIGHTNING if windCycle == True else color
+                                if windCycle == True:
+                                        color = COLOR_LIGHTNING
                 
                 print("Setting LED " + str(i) + " for " + airportcode + " to " + ("lightning " if lightningConditions else "") + ("very " if highWinds else "") + ("windy " if windy else "") + (conditions["flightCategory"] if conditions != None else "None") + " " + str(color))
                 pixels[i] = color
@@ -315,7 +377,7 @@ while looplimit > 0:
                         print("showing METAR Display for " + stationList[displayAirportCounter])
 
         # Switching between animation cycles
-        time.sleep(BLINK_SPEED)
+        DoLightningBlinks(conditionDict, airports, windCycle)
         windCycle = False if windCycle else True
         looplimit -= 1
 
