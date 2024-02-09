@@ -282,7 +282,7 @@ while looplimit > 0:
 
                         #Override for lightning flash
                         if lightningConditions == True:
-                                color = COLOR_LIGHTNING if windCycle == True
+                                color = COLOR_LIGHTNING if windCycle == True else color
                 
                 print("Setting LED " + str(i) + " for " + airportcode + " to " + ("lightning " if lightningConditions else "") + ("very " if highWinds else "") + ("windy " if windy else "") + (conditions["flightCategory"] if conditions != None else "None") + " " + str(color))
                 pixels[i] = color
