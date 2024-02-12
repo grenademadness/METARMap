@@ -46,7 +46,7 @@ COLOR_HIGH_WINDS     = (255,255,0)         # Yellow
 ACTIVATE_WINDCONDITION_ANIMATION = True    # Set this to False for Static or True for animated wind conditions
 #Do you want the Map to Flash white for lightning in the area
 ACTIVATE_LIGHTNING_ANIMATION = True        # Set this to False for Static or True for animated Lightning
-MAX_BLINKS_OF_LIGHTNING = 3
+MAX_LIGHTNING_BLINK_ON_TIME = 0.1
 # Fade instead of blink
 FADE_INSTEAD_OF_BLINK    = True            # Set to False if you want blinking
 # Blinking Windspeed Threshold
@@ -380,11 +380,26 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
         showLegend(pixels, windCycle, i)
         displayTime, displayAirportCounter = updateDisplay(displayTime, displayAirportCounter, disp, stationList, conditionDict, numAirports)
 
-        # Update actual LEDs all at once
-        for x in range(MAX_BLINKS_OF_LIGHTNING):
-            pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
-            pixels.show()        
-            time.sleep(BLINK_SPEED / MAX_BLINKS_OF_LIGHTNING)
+        #show the base colors
+        pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
+        pixels.show()
+        time.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
+
+        #show the lightning flash
+        pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
+        pixels.show()   
+        time.sleep(MAX_LIGHTNING_BLINK_ON_TIME)
+
+        #show remaining base colors
+        pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
+        pixels.show()   
+        time.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
+
+        # # Update actual LEDs all at once
+        # for x in range(MAX_BLINKS_OF_LIGHTNING):
+        #     pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
+        #     pixels.show()        
+        #     time.sleep(BLINK_SPEED / MAX_BLINKS_OF_LIGHTNING)
 
 
         # Switching between animation cycles
