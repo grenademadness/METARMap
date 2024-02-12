@@ -46,6 +46,7 @@ COLOR_HIGH_WINDS     = (255,255,0)         # Yellow
 ACTIVATE_WINDCONDITION_ANIMATION = True    # Set this to False for Static or True for animated wind conditions
 #Do you want the Map to Flash white for lightning in the area
 ACTIVATE_LIGHTNING_ANIMATION = True        # Set this to False for Static or True for animated Lightning
+MAX_BLINKS_OF_LIGHTNING = 2
 # Fade instead of blink
 FADE_INSTEAD_OF_BLINK    = True            # Set to False if you want blinking
 # Blinking Windspeed Threshold
@@ -56,7 +57,7 @@ ALWAYS_BLINK_FOR_GUSTS    = False            # Always animate for Gusts (regardl
 BLINK_SPEED        = 1.0            # Float in seconds, e.g. 0.5 for half a second
 # Total blinking time in seconds.
 # For example set this to 300 to keep blinking for 5 minutes if you plan to run the script every 5 minutes to fetch the updated weather
-BLINK_TOTALTIME_SECONDS    = 300
+BLINK_TOTALTIME_SECONDS    = 20
 
 # ----- Daytime dimming of LEDs based on time of day or Sunset/Sunrise -----
 ACTIVATE_DAYTIME_DIMMING = True        # Set to True if you want to dim the map after a certain time of day
@@ -248,8 +249,8 @@ def startExternalDisplay():
 
 #Find the LED color for an LED's given scenario
 def getLedColor(_conditions, windCycle):
-    if _conditions == None:
-        return COLOR_OFF
+    if _conditions is None:
+        return COLOR_OFF, None
 
     windy = (ACTIVATE_WINDCONDITION_ANIMATION and windCycle and (_conditions["windSpeed"] >= WIND_BLINK_THRESHOLD or _conditions["windGust"]))
     highWinds = (windy and HIGH_WINDS_THRESHOLD != -1 and (_conditions["windSpeed"] >= HIGH_WINDS_THRESHOLD or _conditions["windGustSpeed"] >= HIGH_WINDS_THRESHOLD))
@@ -257,33 +258,40 @@ def getLedColor(_conditions, windCycle):
 
     if not (windy or lightningConditions):
         if _conditions["flightCategory"] == "VFR":
-            return COLOR_VFR
+            return COLOR_VFR, None
         if _conditions["flightCategory"] == "MVFR":
-            return COLOR_MVFR
+            return COLOR_MVFR, None
         if _conditions["flightCategory"] == "IFR":
-            return COLOR_IFR
+            return COLOR_IFR, None
         if _conditions["flightCategory"] == "LIFR":
-            return COLOR_LIFR
+            return COLOR_LIFR, None
     
     if lightningConditions:
-        return COLOR_LIGHTNING
+        if _conditions["flightCategory"] == "VFR":
+            return COLOR_LIGHTNING, COLOR_VFR
+        if _conditions["flightCategory"] == "MVFR":
+            return COLOR_LIGHTNING, COLOR_MVFR
+        if _conditions["flightCategory"] == "IFR":
+            return COLOR_LIGHTNING, COLOR_IFR
+        if _conditions["flightCategory"] == "LIFR":
+            return COLOR_LIGHTNING, COLOR_LIFR
     
     if highWinds:
-        return COLOR_HIGH_WINDS
+        return COLOR_HIGH_WINDS, None
     
     if windy:
         if FADE_INSTEAD_OF_BLINK:
             if _conditions["flightCategory"] == "VFR":
-                return COLOR_VFR_FADE
+                return COLOR_VFR_FADE, None
             if _conditions["flightCategory"] == "MVFR":
-                return COLOR_MVFR_FADE
+                return COLOR_MVFR_FADE, None
             if _conditions["flightCategory"] == "IFR":
-                return COLOR_IFR_FADE
+                return COLOR_IFR_FADE, None
             if _conditions["flightCategory"] == "LIFR":
-                return COLOR_LIFR_FADE        
-        return COLOR_OFF
+                return COLOR_LIFR_FADE  , None      
+        return COLOR_OFF, None
     
-    return COLOR_OFF
+    return COLOR_OFF, None
 
 #Update legend
 def showLegend(pixels, windCycle, i):
@@ -319,6 +327,23 @@ def updateDisplay(displayTime, displayAirportCounter, disp, stationList, conditi
     print("Showing METAR Display for " + stationList[displayAirportCounter])
     return displayTime, displayAirportCounter
 
+#Compare a list and tuple
+def CompareListToTuple(litem, titem):
+    return litem[0] == titem[0] and litem[1] == titem[1] and litem[2] == titem[2]
+
+#Update lightning strobe
+def UpdateLightningStrobe(airports, lightningStrobeColors, pixels):
+    for i, airportcode in enumerate(airports):
+        if lightningStrobeColors[i] is None:
+            continue
+
+        if CompareListToTuple(pixels[i], COLOR_LIGHTNING) == True:
+            pixels[i] = lightningStrobeColors[i]
+        else:
+            pixels[i] = COLOR_LIGHTNING
+
+    return pixels
+
 # Setting LED colors based on weather conditions
 def setLEDs(stationList, airports, conditionDict, pixels, disp):    
     blinksRemaining = 1
@@ -331,6 +356,8 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
         blinksRemaining = int(round(BLINK_TOTALTIME_SECONDS / BLINK_SPEED))
 
     while blinksRemaining > 0:
+        lightningStrobeColors = []
+
         for i, airportcode in enumerate(airports):
             if airportcode == "NULL":
                 continue
@@ -341,24 +368,39 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
             lightningConditions = False
             conditions = conditionDict.get(airportcode, None)
             
-            color = getLedColor(conditions, windCycle)
+            color, lightningStrobeColor = getLedColor(conditions, windCycle)
             print("Setting LED " + str(i) + " for " + airportcode + " to " + ("lightning " if lightningConditions else "") + ("very " if highWinds else "") + ("windy " if windy else "") + (conditions["flightCategory"] if conditions != None else "None") + " " + str(color))
             pixels[i] = color
+            if lightningStrobeColor is None:
+                lightningStrobeColors.append(None)
+            else:
+                lightningStrobeColors.append(lightningStrobeColor)
+
 
         showLegend(pixels, windCycle, i)
-        # Update actual LEDs all at once
-        pixels.show()        
         displayTime, displayAirportCounter = updateDisplay(displayTime, displayAirportCounter, disp, stationList, conditionDict, numAirports)
 
+        # Update actual LEDs all at once
+        for x in range(MAX_BLINKS_OF_LIGHTNING):
+            pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
+            pixels.show()        
+            time.sleep(BLINK_SPEED / MAX_BLINKS_OF_LIGHTNING)
+
+
         # Switching between animation cycles
-        time.sleep(BLINK_SPEED)
-        windCycle = False if windCycle else True
+        windCycle = not windCycle
         blinksRemaining -= 1
 
 astralTimes(astral)
+
 pixels = initializeLEDs()
+
 airports, displayairports = getAirports()
+
 content = getMetarData(airports)
+
 stationList, conditionDict = parseMetarData(content, displayairports)
+
 disp = startExternalDisplay()
+
 setLEDs(stationList, airports, conditionDict, pixels, disp)
