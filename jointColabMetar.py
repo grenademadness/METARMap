@@ -46,7 +46,7 @@ COLOR_HIGH_WINDS     = (255,255,0)         # Yellow
 ACTIVATE_WINDCONDITION_ANIMATION = True    # Set this to False for Static or True for animated wind conditions
 #Do you want the Map to Flash white for lightning in the area
 ACTIVATE_LIGHTNING_ANIMATION = True        # Set this to False for Static or True for animated Lightning
-MAX_BLINKS_OF_LIGHTNING = 2
+MAX_BLINKS_OF_LIGHTNING = 3
 # Fade instead of blink
 FADE_INSTEAD_OF_BLINK    = True            # Set to False if you want blinking
 # Blinking Windspeed Threshold
