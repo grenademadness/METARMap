@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# The circle jerk supreme
+# METARMap script written by Tyler Miller and Josh Cramer
 
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -18,7 +18,7 @@ except ImportError:
 
 print("Running metar.py at " + datetime.datetime.now().strftime('%d/%m/%Y %H:%M'))
 
-# metar.py-Square-1.1.1
+# metar.py-Square-2.2.1
 # ---------------------------------------------------------------------------
 # ------------START OF CONFIGURATION-----------------------------------------
 # ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ ALWAYS_BLINK_FOR_GUSTS    = False            # Always animate for Gusts (regardl
 BLINK_SPEED        = 1.0            # Float in seconds, e.g. 0.5 for half a second
 # Total blinking time in seconds.
 # For example set this to 300 to keep blinking for 5 minutes if you plan to run the script every 5 minutes to fetch the updated weather
-BLINK_TOTALTIME_SECONDS    = 20
+BLINK_TOTALTIME_SECONDS    = 300
 
 # ----- Daytime dimming of LEDs based on time of day or Sunset/Sunrise -----
 ACTIVATE_DAYTIME_DIMMING = True        # Set to True if you want to dim the map after a certain time of day
