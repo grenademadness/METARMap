@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # METARMap script written by Tyler Miller and Josh Cramer
 
+import asyncio
 import urllib.request
 import xml.etree.ElementTree as ET
 import board
@@ -383,23 +384,23 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
         #show the base colors
         pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         pixels.show()
-        time.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
+        asyncio.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
 
         #show the lightning flash
         pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         pixels.show()   
-        time.sleep(MAX_LIGHTNING_BLINK_ON_TIME)
+        asyncio.sleep(MAX_LIGHTNING_BLINK_ON_TIME)
 
         #show remaining base colors
         pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         pixels.show()   
-        time.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
+        asyncio.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
 
         # # Update actual LEDs all at once
         # for x in range(MAX_BLINKS_OF_LIGHTNING):
         #     pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         #     pixels.show()        
-        #     time.sleep(BLINK_SPEED / MAX_BLINKS_OF_LIGHTNING)
+        #     asyncio.sleep(BLINK_SPEED / MAX_BLINKS_OF_LIGHTNING)
 
 
         # Switching between animation cycles
