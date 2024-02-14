@@ -1,7 +1,6 @@
 {
-    "LED_COUNT": "11",
-    "LED_PIN": 18,
-    "LED_BRIGHTNESS": "0.5",   
+    "LED_COUNT": 11,
+    "LED_BRIGHTNESS": 0.5,   
     "LED_ORDER": false,
     
     "COLOR_VFR": [255,0,0],
@@ -18,7 +17,7 @@
     
     "ACTIVATE_WINDCONDITION_ANIMATION": true,
     "ACTIVATE_LIGHTNING_ANIMATION": true,
-    "MAX_LIGHTNING_BLINK_ON_TIME": true,
+    "MAX_LIGHTNING_BLINK_ON_TIME": 0.1,
     "FADE_INSTEAD_OF_BLINK": true,
     "WIND_BLINK_THRESHOLD": 15, 
     "HIGH_WINDS_THRESHOLD": 25,
