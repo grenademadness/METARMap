@@ -16,83 +16,65 @@ try:
 except ImportError:
     displaymetar = None
 
+import json
+import datetime
+
+
 print("Running metar.py at " + datetime.datetime.now().strftime('%d/%m/%Y %H:%M'))
 
-# metar.py-Square-2.2.1
-# ---------------------------------------------------------------------------
-# ------------START OF CONFIGURATION-----------------------------------------
-# ---------------------------------------------------------------------------
+# Read the JSON file
+with open('config.json') as f:
+    config_data = json.load(f)
 
 # NeoPixel LED Configuration
-LED_COUNT        = 11            # Number of LED pixels.
-LED_PIN            = board.D18        # GPIO pin connected to the pixels (18 is PCM).
-LED_BRIGHTNESS        = 0.5            # Float from 0.0 (min) to 1.0 (max)
-LED_ORDER        = neopixel.GRB        # Strip type and colour ordering
+LED_COUNT = config_data['LED_COUNT']
+LED_BRIGHTNESS = config_data['LED_BRIGHTNESS']
+LED_PIN = board.D18
+LED_ORDER = neopixel.GRB
+if(config_data['LED_ORDER'] == True):
+    LED_ORDER = neopixel.RGB
 
-COLOR_VFR        = (255,0,0)        # Green
-COLOR_VFR_FADE        = (125,0,0)        # Green Fade for wind
-COLOR_MVFR        = (0,0,255)        # Blue
-COLOR_MVFR_FADE        = (0,0,125)        # Blue Fade for wind
-COLOR_IFR        = (0,255,0)        # Red
-COLOR_IFR_FADE        = (0,125,0)        # Red Fade for wind
-COLOR_LIFR        = (0,125,125)        # Magenta
-COLOR_LIFR_FADE        = (0,75,75)        # Magenta Fade for wind
-COLOR_OFF        = (0,0,0)        # Clear
-COLOR_LIGHTNING        = (255,255,255)        # White
-COLOR_HIGH_WINDS     = (255,255,0)         # Yellow
+# Define Pixel Colors
+COLOR_VFR = config_data['COLOR_VFR']
+COLOR_VFR_FADE = config_data['COLOR_VFR_FADE']
+COLOR_MVFR = config_data['COLOR_MVFR']
+COLOR_MVFR_FADE = config_data['COLOR_MVFR_FADE']
+COLOR_IFR = config_data['COLOR_IFR']
+COLOR_IFR_FADE = config_data['COLOR_IFR_FADE']
+COLOR_LIFR = config_data['COLOR_LIFR']
+COLOR_LIFR_FADE = config_data['COLOR_LIFR_FADE']
+COLOR_OFF = config_data['COLOR_OFF']
+COLOR_LIGHTNING = config_data['COLOR_LIGHTNING']
+COLOR_HIGH_WINDS = config_data['COLOR_HIGH_WINDS']
 
-# ----- Blink/Fade functionality for Wind and Lightning -----
-# Do you want the METARMap to be static to just show flight conditions, or do you also want blinking/fading based on current wind conditions
-ACTIVATE_WINDCONDITION_ANIMATION = True    # Set this to False for Static or True for animated wind conditions
-#Do you want the Map to Flash white for lightning in the area
-ACTIVATE_LIGHTNING_ANIMATION = True        # Set this to False for Static or True for animated Lightning
-MAX_LIGHTNING_BLINK_ON_TIME = 0.1
-# Fade instead of blink
-FADE_INSTEAD_OF_BLINK    = True            # Set to False if you want blinking
-# Blinking Windspeed Threshold
-WIND_BLINK_THRESHOLD    = 15            # Knots of windspeed to blink/fade
-HIGH_WINDS_THRESHOLD    = 25            # Knots of windspeed to trigger Yellow LED indicating very High Winds, set to -1 if you don't want to use this
-ALWAYS_BLINK_FOR_GUSTS    = False            # Always animate for Gusts (regardless of speeds)
-# Blinking Speed in seconds
-BLINK_SPEED        = 1.0            # Float in seconds, e.g. 0.5 for half a second
-# Total blinking time in seconds.
-# For example set this to 300 to keep blinking for 5 minutes if you plan to run the script every 5 minutes to fetch the updated weather
-BLINK_TOTALTIME_SECONDS    = 300
+# Define Animation States
+ACTIVATE_WINDCONDITION_ANIMATION = config_data['ACTIVATE_WINDCONDITION_ANIMATION']
+ACTIVATE_LIGHTNING_ANIMATION = config_data['ACTIVATE_LIGHTNING_ANIMATION']
 
-# ----- Daytime dimming of LEDs based on time of day or Sunset/Sunrise -----
-ACTIVATE_DAYTIME_DIMMING = True        # Set to True if you want to dim the map after a certain time of day
-BRIGHT_TIME_START    = datetime.time(7,0)    # Time of day to run at LED_BRIGHTNESS in hours and minutes
-DIM_TIME_START        = datetime.time(19,0)    # Time of day to run at LED_BRIGHTNESS_DIM in hours and minutes
-LED_BRIGHTNESS_DIM    = 0.1            # Float from 0.0 (min) to 1.0 (max)
+# Animation Parameters
+MAX_LIGHTNING_BLINK_ON_TIME = config_data['MAX_LIGHTNING_BLINK_ON_TIME']
+FADE_INSTEAD_OF_BLINK = config_data['FADE_INSTEAD_OF_BLINK']
+WIND_BLINK_THRESHOLD = config_data['WIND_BLINK_THRESHOLD']
+HIGH_WINDS_THRESHOLD = config_data['HIGH_WINDS_THRESHOLD']
+ALWAYS_BLINK_FOR_GUSTS = config_data['ALWAYS_BLINK_FOR_GUSTS']
+BLINK_SPEED = config_data['BLINK_SPEED']
+BLINK_TOTALTIME_SECONDS = config_data['BLINK_TOTALTIME_SECONDS']
+ACTIVATE_DAYTIME_DIMMING = config_data['ACTIVATE_DAYTIME_DIMMING']
 
-USE_SUNRISE_SUNSET     = True            # Set to True if instead of fixed times for bright/dimming, you want to use local sunrise/sunset
-LOCATION         = "Orlando"        # Nearby city for Sunset/Sunrise timing, refer to https://astral.readthedocs.io/en/latest/#cities for list of cities supported
+# Astral timings
+BRIGHT_TIME_START = datetime.datetime.strptime(config_data['BRIGHT_TIME_START'], "%H:%M").time()
+DIM_TIME_START = datetime.datetime.strptime(config_data['DIM_TIME_START'], "%H:%M").time()
 
-# ----- External Display support -----
-ACTIVATE_EXTERNAL_METAR_DISPLAY = True        # Set to True if you want to display METAR conditions to a small external display
-DISPLAY_ROTATION_SPEED = 10.0            # Float in seconds, e.g 2.0 for two seconds
+# Other Settings
+LED_BRIGHTNESS_DIM = config_data['LED_BRIGHTNESS_DIM']
+USE_SUNRISE_SUNSET = config_data['USE_SUNRISE_SUNSET']
+LOCATION = config_data['LOCATION']
+ACTIVATE_EXTERNAL_METAR_DISPLAY = config_data['ACTIVATE_EXTERNAL_METAR_DISPLAY']
+DISPLAY_ROTATION_SPEED = config_data['DISPLAY_ROTATION_SPEED']
+SHOW_LEGEND = config_data['SHOW_LEGEND']
+OFFSET_LEGEND_BY = config_data['OFFSET_LEGEND_BY']
 
-# ----- Show a set of Legend LEDS at the end -----
-SHOW_LEGEND = False            # Set to true if you want to have a set of LEDs at the end show the legend
-# You'll need to add 7 LEDs at the end of your string of LEDs
-# If you want to offset the legend LEDs from the end of the last airport from the airports file,
-# then change this offset variable by the number of LEDs to skip before the LED that starts the legend
-OFFSET_LEGEND_BY = 0
-# The order of LEDs is:
-#    VFR
-#    MVFR
-#    IFR
-#    LIFR
-#    LIGHTNING
-#    WINDY
-#    HIGH WINDS
-
-
-# ---------------------------------------------------------------------------
-# ------------END OF CONFIGURATION-------------------------------------------
-# ---------------------------------------------------------------------------
-
-# Figure out sunrise/sunset times if astral is being used
+# Sunrise/Sunset across the map - needs to be fixed
 def astralTimes(astral):
     if astral is None:
         return
