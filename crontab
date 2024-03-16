@@ -22,3 +22,4 @@
 # m h  dom mon dow   command
 */5 7-21 * * *  /home/pi/refresh.sh
 05 22 * * *     /home/pi/lightsoff.sh
+10 23 * * * /home/pi/update.sh
