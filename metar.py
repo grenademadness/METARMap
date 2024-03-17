@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # METARMap script written by Tyler Miller and Josh Cramer
 
+
 import urllib.request
 import xml.etree.ElementTree as ET
 import board
@@ -16,41 +17,31 @@ try:
 except ImportError:
     displaymetar = None
 
+
 import json
 import datetime
 
 
+
+
 print("Running metar.py at " + datetime.datetime.now().strftime('%d/%m/%Y %H:%M'))
-
-
-
-
 
 
 # Read the JSON file
 with open('config.json') as f:
     config_data = json.load(f)
 
-# # Access the pin number from the loaded JSON data
-# LED_PIN_number = config_data['LED_PIN']
 
-# # Use board to create a reference to the desired pin
-# LED_PIN = digitalio.DigitalInOut(LED_PIN_number)
-# #LED_PIN.direction = digitalio.Direction.OUTPUT
+# NeoPixel LED Configuration
+LED_COUNT = config_data['LED_COUNT']
+LED_BRIGHTNESS = config_data['LED_BRIGHTNESS']
 LED_PIN = board.D18
-
-
 LED_ORDER = neopixel.GRB
 if(config_data['LED_ORDER'] == True):
     LED_ORDER = neopixel.RGB
 
 
-
-
-# NeoPixel LED Configuration
-LED_COUNT = config_data['LED_COUNT']
-LED_BRIGHTNESS = config_data['LED_BRIGHTNESS']
-
+# Define Pixel Colors
 COLOR_VFR = config_data['COLOR_VFR']
 COLOR_VFR_FADE = config_data['COLOR_VFR_FADE']
 COLOR_MVFR = config_data['COLOR_MVFR']
@@ -63,9 +54,13 @@ COLOR_OFF = config_data['COLOR_OFF']
 COLOR_LIGHTNING = config_data['COLOR_LIGHTNING']
 COLOR_HIGH_WINDS = config_data['COLOR_HIGH_WINDS']
 
+
+# Define Animation States
 ACTIVATE_WINDCONDITION_ANIMATION = config_data['ACTIVATE_WINDCONDITION_ANIMATION']
 ACTIVATE_LIGHTNING_ANIMATION = config_data['ACTIVATE_LIGHTNING_ANIMATION']
 
+
+# Animation Parameters
 MAX_LIGHTNING_BLINK_ON_TIME = config_data['MAX_LIGHTNING_BLINK_ON_TIME']
 FADE_INSTEAD_OF_BLINK = config_data['FADE_INSTEAD_OF_BLINK']
 WIND_BLINK_THRESHOLD = config_data['WIND_BLINK_THRESHOLD']
@@ -75,9 +70,13 @@ BLINK_SPEED = config_data['BLINK_SPEED']
 BLINK_TOTALTIME_SECONDS = config_data['BLINK_TOTALTIME_SECONDS']
 ACTIVATE_DAYTIME_DIMMING = config_data['ACTIVATE_DAYTIME_DIMMING']
 
+
+# Astral timings
 BRIGHT_TIME_START = datetime.datetime.strptime(config_data['BRIGHT_TIME_START'], "%H:%M").time()
 DIM_TIME_START = datetime.datetime.strptime(config_data['DIM_TIME_START'], "%H:%M").time()
 
+
+# Other Settings
 LED_BRIGHTNESS_DIM = config_data['LED_BRIGHTNESS_DIM']
 USE_SUNRISE_SUNSET = config_data['USE_SUNRISE_SUNSET']
 LOCATION = config_data['LOCATION']
@@ -85,6 +84,7 @@ ACTIVATE_EXTERNAL_METAR_DISPLAY = config_data['ACTIVATE_EXTERNAL_METAR_DISPLAY']
 DISPLAY_ROTATION_SPEED = config_data['DISPLAY_ROTATION_SPEED']
 SHOW_LEGEND = config_data['SHOW_LEGEND']
 OFFSET_LEGEND_BY = config_data['OFFSET_LEGEND_BY']
+
 
 # Sunrise/Sunset across the map - needs to be fixed
 def astralTimes(astral):
@@ -121,10 +121,12 @@ def astralTimes(astral):
             DIM_TIME_START = sun['sunset'].time()
     print("Sunrise:" + BRIGHT_TIME_START.strftime('%H:%M') + " Sunset:" + DIM_TIME_START.strftime('%H:%M'))
 
+
 # Initialize the LED strip
 def initializeLEDs():
     bright = BRIGHT_TIME_START < datetime.datetime.now().time() < DIM_TIME_START
     pixels = neopixel.NeoPixel(LED_PIN, LED_COUNT, brightness = LED_BRIGHTNESS_DIM if (ACTIVATE_DAYTIME_DIMMING and bright == False) else LED_BRIGHTNESS, pixel_order = LED_ORDER, auto_write = False)
+
 
     print("Wind animation:" + str(ACTIVATE_WINDCONDITION_ANIMATION))
     print("Lightning animation:" + str(ACTIVATE_LIGHTNING_ANIMATION))
@@ -132,6 +134,7 @@ def initializeLEDs():
     print("External Display:" + str(ACTIVATE_EXTERNAL_METAR_DISPLAY))
     
     return pixels
+
 
 # Read the airports file to retrieve list of airports and use as order for LEDs
 def getAirports():
@@ -147,6 +150,7 @@ def getAirports():
         print("Rotating through all airports on LED display")
         displayairports = None
 
+
     if len(airports) > LED_COUNT:
         print()
         print("WARNING: Too many airports in airports file, please increase LED_COUNT or reduce the number of airports")
@@ -154,7 +158,9 @@ def getAirports():
         print()
         quit()
 
+
     return airports, displayairports
+
 
 # Retrieve METAR from aviationweather.gov data server
 def getMetarData(airports):
@@ -164,7 +170,9 @@ def getMetarData(airports):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 Edg/86.0.622.69'})
     content = urllib.request.urlopen(req).read()
 
+
     return content
+
 
 # Retrieve flying conditions from the service response and store in a dictionary for each airport
 def parseMetarData(content, displayairports):
@@ -229,7 +237,9 @@ def parseMetarData(content, displayairports):
         if displayairports is None or stationId in displayairports:
             stationList.append(stationId)
 
+
     return stationList, conditionDict
+
 
 # Start up external display output
 def startExternalDisplay():
@@ -239,16 +249,20 @@ def startExternalDisplay():
         disp = displaymetar.startDisplay()
         displaymetar.clearScreen(disp)
 
+
     return disp
+
 
 #Find the LED color for an LED's given scenario
 def getLedColor(_conditions, windCycle):
     if _conditions is None:
         return COLOR_OFF, None
 
+
     windy = (ACTIVATE_WINDCONDITION_ANIMATION and windCycle and (_conditions["windSpeed"] >= WIND_BLINK_THRESHOLD or _conditions["windGust"]))
     highWinds = (windy and HIGH_WINDS_THRESHOLD != -1 and (_conditions["windSpeed"] >= HIGH_WINDS_THRESHOLD or _conditions["windGustSpeed"] >= HIGH_WINDS_THRESHOLD))
     lightningConditions = (ACTIVATE_LIGHTNING_ANIMATION and (not windCycle) and _conditions["lightning"])
+
 
     if not (windy or lightningConditions):
         if _conditions["flightCategory"] == "VFR":
@@ -287,6 +301,7 @@ def getLedColor(_conditions, windCycle):
     
     return COLOR_OFF, None
 
+
 #Update legend
 def showLegend(pixels, windCycle, i):
     if not SHOW_LEGEND:
@@ -297,14 +312,18 @@ def showLegend(pixels, windCycle, i):
     pixels[i + OFFSET_LEGEND_BY + 2] = COLOR_IFR
     pixels[i + OFFSET_LEGEND_BY + 3] = COLOR_LIFR
 
+
     if ACTIVATE_LIGHTNING_ANIMATION == True:
         pixels[i + OFFSET_LEGEND_BY + 4] = COLOR_LIGHTNING if windCycle else COLOR_VFR # lightning
+
 
     if ACTIVATE_WINDCONDITION_ANIMATION == True:
         pixels[i+ OFFSET_LEGEND_BY + 5] = COLOR_VFR if not windCycle else (COLOR_VFR_FADE if FADE_INSTEAD_OF_BLINK else COLOR_OFF)    # windy
 
+
         if HIGH_WINDS_THRESHOLD != -1:
             pixels[i + OFFSET_LEGEND_BY + 6] = COLOR_VFR if not windCycle else COLOR_HIGH_WINDS  # high winds
+
 
 # Rotate through airports METAR on external display
 def updateDisplay(displayTime, displayAirportCounter, disp, stationList, conditionDict, numAirports):
@@ -316,14 +335,17 @@ def updateDisplay(displayTime, displayAirportCounter, disp, stationList, conditi
         displayTime += BLINK_SPEED
         return displayTime, displayAirportCounter
 
+
     displayTime = 0.0
     displayAirportCounter = displayAirportCounter + 1 if displayAirportCounter < numAirports-1 else 0
     print("Showing METAR Display for " + stationList[displayAirportCounter])
     return displayTime, displayAirportCounter
 
+
 #Compare a list and tuple
 def CompareListToTuple(litem, titem):
     return litem[0] == titem[0] and litem[1] == titem[1] and litem[2] == titem[2]
+
 
 #Update lightning strobe
 def UpdateLightningStrobe(airports, lightningStrobeColors, pixels):
@@ -331,12 +353,15 @@ def UpdateLightningStrobe(airports, lightningStrobeColors, pixels):
         if lightningStrobeColors[i] is None:
             continue
 
+
         if CompareListToTuple(pixels[i], COLOR_LIGHTNING) == True:
             pixels[i] = lightningStrobeColors[i]
         else:
             pixels[i] = COLOR_LIGHTNING
 
+
     return pixels
+
 
 # Setting LED colors based on weather conditions
 def setLEDs(stationList, airports, conditionDict, pixels, disp):    
@@ -346,15 +371,19 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
     displayAirportCounter = 0
     numAirports = len(stationList)
 
+
     if ACTIVATE_WINDCONDITION_ANIMATION or ACTIVATE_LIGHTNING_ANIMATION or ACTIVATE_EXTERNAL_METAR_DISPLAY:
         blinksRemaining = int(round(BLINK_TOTALTIME_SECONDS / BLINK_SPEED))
+
 
     while blinksRemaining > 0:
         lightningStrobeColors = []
 
+
         for i, airportcode in enumerate(airports):
             if airportcode == "NULL":
                 continue
+
 
             color = COLOR_OFF
             windy = False
@@ -371,23 +400,29 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
                 lightningStrobeColors.append(lightningStrobeColor)
 
 
+
+
         showLegend(pixels, windCycle, i)
         displayTime, displayAirportCounter = updateDisplay(displayTime, displayAirportCounter, disp, stationList, conditionDict, numAirports)
+
 
         #show the base colors
         pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         pixels.show()
         time.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
 
+
         #show the lightning flash
         pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         pixels.show()   
         time.sleep(MAX_LIGHTNING_BLINK_ON_TIME)
 
+
         #show remaining base colors
         pixels = UpdateLightningStrobe(airports, lightningStrobeColors, pixels)
         pixels.show()   
         time.sleep((BLINK_SPEED - MAX_LIGHTNING_BLINK_ON_TIME)/2)
+
 
         # # Update actual LEDs all at once
         # for x in range(MAX_BLINKS_OF_LIGHTNING):
@@ -396,20 +431,29 @@ def setLEDs(stationList, airports, conditionDict, pixels, disp):
         #     time.sleep(BLINK_SPEED / MAX_BLINKS_OF_LIGHTNING)
 
 
+
+
         # Switching between animation cycles
         windCycle = not windCycle
         blinksRemaining -= 1
 
+
 astralTimes(astral)
+
 
 pixels = initializeLEDs()
 
+
 airports, displayairports = getAirports()
+
 
 content = getMetarData(airports)
 
+
 stationList, conditionDict = parseMetarData(content, displayairports)
 
+
 disp = startExternalDisplay()
+
 
 setLEDs(stationList, airports, conditionDict, pixels, disp)
