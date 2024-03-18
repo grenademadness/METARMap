@@ -22,35 +22,19 @@ import datetime
 
 print("Running metar.py at " + datetime.datetime.now().strftime('%d/%m/%Y %H:%M'))
 
-
-
-
-
-
 # Read the JSON file
 with open('config.json') as f:
     config_data = json.load(f)
 
-# # Access the pin number from the loaded JSON data
-# LED_PIN_number = config_data['LED_PIN']
-
-# # Use board to create a reference to the desired pin
-# LED_PIN = digitalio.DigitalInOut(LED_PIN_number)
-# #LED_PIN.direction = digitalio.Direction.OUTPUT
+# NeoPixel LED Configuration
+LED_COUNT = config_data['LED_COUNT']
+LED_BRIGHTNESS = config_data['LED_BRIGHTNESS']
 LED_PIN = board.D18
-
-
 LED_ORDER = neopixel.GRB
 if(config_data['LED_ORDER'] == True):
     LED_ORDER = neopixel.RGB
 
-
-
-
-# NeoPixel LED Configuration
-LED_COUNT = config_data['LED_COUNT']
-LED_BRIGHTNESS = config_data['LED_BRIGHTNESS']
-
+# Define Pixel Colors
 COLOR_VFR = config_data['COLOR_VFR']
 COLOR_VFR_FADE = config_data['COLOR_VFR_FADE']
 COLOR_MVFR = config_data['COLOR_MVFR']
@@ -63,9 +47,11 @@ COLOR_OFF = config_data['COLOR_OFF']
 COLOR_LIGHTNING = config_data['COLOR_LIGHTNING']
 COLOR_HIGH_WINDS = config_data['COLOR_HIGH_WINDS']
 
+# Define Animation States
 ACTIVATE_WINDCONDITION_ANIMATION = config_data['ACTIVATE_WINDCONDITION_ANIMATION']
 ACTIVATE_LIGHTNING_ANIMATION = config_data['ACTIVATE_LIGHTNING_ANIMATION']
 
+# Animation Parameters
 MAX_LIGHTNING_BLINK_ON_TIME = config_data['MAX_LIGHTNING_BLINK_ON_TIME']
 FADE_INSTEAD_OF_BLINK = config_data['FADE_INSTEAD_OF_BLINK']
 WIND_BLINK_THRESHOLD = config_data['WIND_BLINK_THRESHOLD']
@@ -75,9 +61,11 @@ BLINK_SPEED = config_data['BLINK_SPEED']
 BLINK_TOTALTIME_SECONDS = config_data['BLINK_TOTALTIME_SECONDS']
 ACTIVATE_DAYTIME_DIMMING = config_data['ACTIVATE_DAYTIME_DIMMING']
 
+# Astral timings
 BRIGHT_TIME_START = datetime.datetime.strptime(config_data['BRIGHT_TIME_START'], "%H:%M").time()
 DIM_TIME_START = datetime.datetime.strptime(config_data['DIM_TIME_START'], "%H:%M").time()
 
+# Other Settings
 LED_BRIGHTNESS_DIM = config_data['LED_BRIGHTNESS_DIM']
 USE_SUNRISE_SUNSET = config_data['USE_SUNRISE_SUNSET']
 LOCATION = config_data['LOCATION']
